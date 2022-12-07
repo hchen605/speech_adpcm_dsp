@@ -1,0 +1,47 @@
+function decode=decoder_4(encode_in)
+
+Ns=length(encode_in);
+nbit=4;
+pre=0;
+
+step=0.001; 
+scaler=1;
+step_min=0.001;
+step_max=0.02;
+
+u=0.96875; %0.9563
+window_length=20;
+
+d_buffer=zeros(1,window_length);
+decode=[];
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+step = round(step*2^16);
+step_min = round(step_min*2^16);
+step_max = round(step_max*2^16);
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+for n=1:Ns
+     
+    diff_d=dequantizer_4(encode_in(n),step); %% input 01110, out=0.xx
+    
+    d_buffer=[diff_d d_buffer(1:end-1)];
+    s_d=pre+diff_d;
+    pre=u*s_d;
+      
+    step=(scaler*mean(abs(d_buffer)));  
+    if step>step_max 
+        step=step_max;
+    elseif  step<step_min
+        step=step_min;
+    else
+        step=step;
+    end
+      
+    decode=[s_d decode];
+    n=n+1;
+end
+
+%encode=dec2bin(encode);
+%%% step size proportional to mean(abs(s(n)-pre))
+    
